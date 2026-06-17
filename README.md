@@ -6,7 +6,7 @@
 
 <p align="center">
   Owner/operator at <a href="https://littlemanoperating.net">Little Man Operating LLC</a>.
-  Build in the field, usally refined in the lab...
+  Built in the field, usally refined in the lab...
 </p>
 
 ---
