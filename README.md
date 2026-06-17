@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/lmo-logo.png" width="112" alt="Little Man Operating LLC logo">
+  <img src="assets/lmo-logo.png" width="112" alt="LMO logo">
 </p>
 
 <h1 align="center">Radford Davis</h1>
@@ -40,4 +40,3 @@ Website: [littlemanoperating.net](https://littlemanoperating.net)
 ## Projects
 
 Public project work will show up here as it becomes ready to share. I would rather publish fewer repos with clear READMEs than a pile of half-explained code.
-
