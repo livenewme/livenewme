@@ -2,22 +2,20 @@
   <img src="assets/lmo-logo.png" width="112" alt="LMO logo">
 </p>
 
-<h1 align="center">Radford Davis</h1>
+<h1 align="center">Robert Davis</h1>
 
 <p align="center">
   Owner/operator at <a href="https://littlemanoperating.net">Little Man Operating LLC</a>.
-  Building local-first AI agents, automation tools, and practical interfaces.
+  Build in the field, usally refined in the lab...
 </p>
 
 ---
 
 ## What I Build
 
-- Local-first AI agent workspaces
 - Automation systems that stay understandable and maintainable
-- Developer tools for real projects, not demos
+- Developer tools for real projects
 - Interfaces for monitoring, delegation, and daily operations
-- Roblox/Rojo experiments and game tooling
 
 ## Current Focus
 
@@ -34,9 +32,10 @@ I am building toward a personal agent stack where tools, memory, projects, and m
 ## Business
 
 I own and operate **Little Man Operating LLC**, a small business home for merchandise, experiments, and practical software work.
+primary work is upstream oil and gas operations
 
 Website: [littlemanoperating.net](https://littlemanoperating.net)
 
 ## Projects
 
-Public project work will show up here as it becomes ready to share. I would rather publish fewer repos with clear READMEs than a pile of half-explained code.
+Public project work will show up here as it becomes ready to share. I would rather publish fewer repos with clear READMEs than a pile of half-explained code. sometimes...
