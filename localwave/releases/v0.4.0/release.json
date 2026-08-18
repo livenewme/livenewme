@@ -1,0 +1,9 @@
+{
+  "versionCode": 12,
+  "versionName": "0.4.0",
+  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.4.0/LocalWave-v0.4.0.apk",
+  "sha256": "beb721dc881147d8bc545b936ac340ada3aae7bf03ccb41fb3730e9e0598d61e",
+  "releaseNotes": "Broad polish and quality-of-life release. Adds persistent library sorting and tab state, sort by title/artist/album/newest, manual library refresh and scan status, clearer search/empty states, album and artist artwork, real persistent shuffle and repeat modes, previous/next wraparound, elapsed/total playback time, artwork caching, song details and diagnostics, and delayed notification permission until playback. Metadata auto-fill is smoother with editable search terms, filename fallback, title-only fallback, deduplicated/ranked candidates, variant penalties, immediate field population, Revert, and unsaved-edit protection.",
+  "sizeBytes": 607995,
+  "publishedAtUtc": "2026-08-18T06:46:27.695026+00:00"
+}

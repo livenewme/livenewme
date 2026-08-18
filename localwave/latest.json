@@ -1,7 +1,7 @@
 {
-  "versionCode": 11,
-  "versionName": "0.3.1",
-  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.3.1/LocalWave-v0.3.1.apk",
-  "sha256": "16892b14bd9edee6d4ddf9abe55e8aee08390f515d847292f28d9279c21bb23a",
-  "releaseNotes": "Automatic MP3 metadata search. In the metadata editor, tap Auto-fill metadata from MusicBrainz to search by title/artist and track duration, review ranked candidates, select a match, and populate title, artist, album, album artist, year, track number, genre when available, and Cover Art Archive artwork. Search is opt-in and never writes the MP3 until Save is pressed."
+  "versionCode": 12,
+  "versionName": "0.4.0",
+  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.4.0/LocalWave-v0.4.0.apk",
+  "sha256": "beb721dc881147d8bc545b936ac340ada3aae7bf03ccb41fb3730e9e0598d61e",
+  "releaseNotes": "Broad polish and quality-of-life release. Adds persistent library sorting and tab state, sort by title/artist/album/newest, manual library refresh and scan status, clearer search/empty states, album and artist artwork, real persistent shuffle and repeat modes, previous/next wraparound, elapsed/total playback time, artwork caching, song details and diagnostics, and delayed notification permission until playback. Metadata auto-fill is smoother with editable search terms, filename fallback, title-only fallback, deduplicated/ranked candidates, variant penalties, immediate field population, Revert, and unsaved-edit protection."
 }
