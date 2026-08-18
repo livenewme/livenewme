@@ -1,0 +1,9 @@
+{
+  "versionCode": 10,
+  "versionName": "0.3.0",
+  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.3.0/LocalWave-v0.3.0.apk",
+  "sha256": "3ce6034cd69a73bc1e6146a57db4f806a794c9df59948c8c70d1153b4da64283",
+  "releaseNotes": "MP3 metadata editor. Long-press a song to edit title, artist, album, album artist, genre, year, track number, and embedded cover art. Changes are written to the MP3 file itself using Android's scoped-storage write consent, with an original-file restore safeguard if replacement fails.",
+  "sizeBytes": 591611,
+  "publishedAtUtc": "2026-08-18T03:53:25.747460+00:00"
+}
