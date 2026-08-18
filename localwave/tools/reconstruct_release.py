@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import base64
+import gzip
 import hashlib
 import json
 import re
@@ -119,9 +120,28 @@ def main():
         if not isinstance(prefix, int) or prefix < 0 or prefix > len(unsigned):
             fail("prefixBytes is outside the unsigned APK")
 
-        tail = decode_parts(staging / "tail", parts, MAX_TAIL_BYTES)
-        if not tail:
-            fail("signed tail is empty")
+        compression = str(meta.get("tailCompression", "none"))
+        tail_dir = staging / ("gzip-tail" if compression == "gzip" else "tail")
+        encoded_tail = decode_parts(tail_dir, parts, MAX_TAIL_BYTES)
+
+        if compression == "gzip":
+            compressed_sha = str(meta.get("compressedTailSha256", "")).lower()
+            if not SHA_RE.fullmatch(compressed_sha):
+                fail("compressedTailSha256 must be exactly 64 hexadecimal characters")
+            actual_compressed_sha = hashlib.sha256(encoded_tail).hexdigest()
+            if actual_compressed_sha != compressed_sha:
+                fail(f"compressed tail SHA-256 mismatch: expected {compressed_sha}, got {actual_compressed_sha}")
+            try:
+                tail = gzip.decompress(encoded_tail)
+            except Exception as exc:
+                fail(f"gzip signing tail is invalid: {exc}")
+        elif compression == "none":
+            tail = encoded_tail
+        else:
+            fail(f"unsupported tailCompression: {compression}")
+
+        if not tail or len(tail) > MAX_TAIL_BYTES:
+            fail("signed tail has an invalid size")
         apk = unsigned[:prefix] + tail
 
     else:
