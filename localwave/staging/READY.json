@@ -1,0 +1,9 @@
+{
+  "versionCode": 999,
+  "versionName": "999.0",
+  "fileName": "LocalWave-v999.0.apk",
+  "sha256": "bc94630004c847ac0018bbbf82c5bb38ba2e052095453e11b82b23c158e220c3",
+  "releaseNotes": "LocalWave release pipeline dry-run validation payload.",
+  "parts": 1,
+  "dryRun": true
+}
