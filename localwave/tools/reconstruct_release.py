@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 MAX_APK_BYTES = 100 * 1024 * 1024
+MAX_TAIL_BYTES = 4 * 1024 * 1024
 VERSION_RE = re.compile(r"^[0-9]+(?:\.[0-9]+){1,3}(?:[-+][0-9A-Za-z.-]+)?$")
 SHA_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 
@@ -15,13 +16,45 @@ def fail(message: str):
     raise SystemExit(f"LocalWave release validation failed: {message}")
 
 
+def decode_parts(directory: Path, count: int, max_decoded_bytes: int) -> bytes:
+    expected = [directory / f"part-{i:04d}.b64" for i in range(count)]
+    for p in expected:
+        if not p.is_file():
+            fail(f"missing staging part {p.name}")
+
+    actual_names = sorted(p.name for p in directory.glob("part-*.b64"))
+    expected_names = [p.name for p in expected]
+    if actual_names != expected_names:
+        fail("staging contains unexpected or incorrectly numbered parts")
+
+    chunks = []
+    encoded_total = 0
+    max_b64 = ((max_decoded_bytes + 2) // 3) * 4 + 4096
+    for p in expected:
+        text = "".join(p.read_text(encoding="ascii").split())
+        encoded_total += len(text)
+        if encoded_total > max_b64:
+            fail("encoded payload exceeds maximum permitted size")
+        chunks.append(text)
+
+    try:
+        data = base64.b64decode("".join(chunks), validate=True)
+    except Exception as exc:
+        fail(f"Base64 payload is invalid: {exc}")
+
+    if len(data) > max_decoded_bytes:
+        fail("decoded payload exceeds maximum permitted size")
+    return data
+
+
 def main():
-    if len(sys.argv) != 4:
-        fail("usage: reconstruct_release.py <staging-dir> <output-apk> <output-meta-json>")
+    if len(sys.argv) not in (4, 5):
+        fail("usage: reconstruct_release.py <staging-dir> <output-apk> <output-meta-json> [unsigned-apk]")
 
     staging = Path(sys.argv[1])
     out_apk = Path(sys.argv[2])
     out_meta = Path(sys.argv[3])
+    unsigned_path = Path(sys.argv[4]) if len(sys.argv) == 5 else None
     ready = staging / "READY.json"
 
     if not ready.is_file():
@@ -60,37 +93,44 @@ def main():
     if not isinstance(parts, int) or parts < 1 or parts > 512:
         fail("parts must be an integer from 1 through 512")
 
-    part_dir = staging / "parts"
-    expected_parts = [part_dir / f"part-{i:04d}.b64" for i in range(parts)]
-    for p in expected_parts:
-        if not p.is_file():
-            fail(f"missing staging part {p.name}")
+    transport = str(meta.get("transportMode", "full-base64"))
 
-    actual_part_names = sorted(p.name for p in part_dir.glob("part-*.b64"))
-    expected_part_names = [p.name for p in expected_parts]
-    if actual_part_names != expected_part_names:
-        fail("staging contains unexpected or incorrectly numbered parts")
+    if transport == "full-base64":
+        apk = decode_parts(staging / "parts", parts, MAX_APK_BYTES)
 
-    encoded_chunks = []
-    encoded_total = 0
-    max_b64 = ((MAX_APK_BYTES + 2) // 3) * 4 + 4096
-    for p in expected_parts:
-        text = "".join(p.read_text(encoding="ascii").split())
-        encoded_total += len(text)
-        if encoded_total > max_b64:
-            fail("encoded APK exceeds maximum permitted size")
-        encoded_chunks.append(text)
+    elif transport == "unsigned-artifact-tail":
+        if unsigned_path is None or not unsigned_path.is_file():
+            fail("unsigned-artifact-tail transport requires an unsigned APK input")
 
-    try:
-        apk = base64.b64decode("".join(encoded_chunks), validate=True)
-    except Exception as exc:
-        fail(f"Base64 payload is invalid: {exc}")
+        unsigned_sha = str(meta.get("unsignedApkSha256", "")).lower()
+        if not SHA_RE.fullmatch(unsigned_sha):
+            fail("unsignedApkSha256 must be exactly 64 hexadecimal characters")
+
+        unsigned = unsigned_path.read_bytes()
+        if not unsigned or len(unsigned) > MAX_APK_BYTES:
+            fail("unsigned APK has an invalid size")
+        if not unsigned.startswith(b"PK\x03\x04"):
+            fail("unsigned source is not an APK/ZIP file")
+        actual_unsigned_sha = hashlib.sha256(unsigned).hexdigest()
+        if actual_unsigned_sha != unsigned_sha:
+            fail(f"unsigned APK SHA-256 mismatch: expected {unsigned_sha}, got {actual_unsigned_sha}")
+
+        prefix = meta.get("prefixBytes")
+        if not isinstance(prefix, int) or prefix < 0 or prefix > len(unsigned):
+            fail("prefixBytes is outside the unsigned APK")
+
+        tail = decode_parts(staging / "tail", parts, MAX_TAIL_BYTES)
+        if not tail:
+            fail("signed tail is empty")
+        apk = unsigned[:prefix] + tail
+
+    else:
+        fail(f"unsupported transportMode: {transport}")
 
     if not apk or len(apk) > MAX_APK_BYTES:
-        fail("decoded APK has an invalid size")
-
+        fail("reconstructed APK has an invalid size")
     if not apk.startswith(b"PK\x03\x04"):
-        fail("decoded payload is not an APK/ZIP file")
+        fail("reconstructed payload is not an APK/ZIP file")
 
     actual_sha = hashlib.sha256(apk).hexdigest()
     if actual_sha != sha256:
@@ -106,6 +146,7 @@ def main():
         "sha256": sha256,
         "releaseNotes": notes,
         "parts": parts,
+        "transportMode": transport,
         "dryRun": bool(meta.get("dryRun", False)),
         "sizeBytes": len(apk),
     }
