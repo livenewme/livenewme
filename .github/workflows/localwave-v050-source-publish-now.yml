@@ -1,0 +1,178 @@
+name: Publish LocalWave v0.5.0 from staged source
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/localwave-v050-source-publish-now.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: localwave-release-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out public distribution repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+
+      - name: Install Android build and verification tools
+        shell: bash
+        run: |
+          set +o pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" >/dev/null
+
+      - name: Reconstruct staged canonical source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d localwave/staging/source
+          for i in 0000 0001 0002 0003 0004 0005 0006 0007; do
+            test -s "localwave/staging/source/part-${i}.b64"
+          done
+          test "$(find localwave/staging/source -maxdepth 1 -type f -name 'part-*.b64' | wc -l)" -eq 8
+
+          cat \
+            localwave/staging/source/part-0000.b64 \
+            localwave/staging/source/part-0001.b64 \
+            localwave/staging/source/part-0002.b64 \
+            localwave/staging/source/part-0003.b64 \
+            localwave/staging/source/part-0004.b64 \
+            localwave/staging/source/part-0005.b64 \
+            localwave/staging/source/part-0006.b64 \
+            localwave/staging/source/part-0007.b64 \
+            | tr -d '\r\n\t ' | base64 -d > /tmp/localwave-source.tar.gz
+
+          test -s /tmp/localwave-source.tar.gz
+          echo "Staged source SHA-256: $(sha256sum /tmp/localwave-source.tar.gz | awk '{print $1}')"
+
+          rm -rf /tmp/localwave-source
+          mkdir -p /tmp/localwave-source
+          tar -xzf /tmp/localwave-source.tar.gz -C /tmp/localwave-source --strip-components=1
+          test -f /tmp/localwave-source/app/build.gradle
+          grep -q 'applicationId "app.localwave.player"' /tmp/localwave-source/app/build.gradle
+          grep -q 'versionCode 16' /tmp/localwave-source/app/build.gradle
+          grep -q 'versionName "0.5.0"' /tmp/localwave-source/app/build.gradle
+
+      - name: Build exact unsigned v0.5.0 APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/localwave-source
+          gradle :app:assembleRelease --stacktrace
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -f -p 4 \
+            app/build/outputs/apk/release/app-release-unsigned.apk \
+            /tmp/LocalWave-v0.5.0-unsigned-aligned.apk
+          test -s /tmp/LocalWave-v0.5.0-unsigned-aligned.apk
+          echo 'f1a5409878dda2f5a9fd9989e68276afda66b3f0819c3824af1c3bd4ae526711  /tmp/LocalWave-v0.5.0-unsigned-aligned.apk' | sha256sum -c -
+
+      - name: Reconstruct exact historical-key signed APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in 0000 0001 0002 0003; do
+            test -s "localwave/staging/gzip-tail/part-${i}.b64"
+          done
+          test "$(find localwave/staging/gzip-tail -maxdepth 1 -type f -name 'part-*.b64' | wc -l)" -eq 4
+
+          cat \
+            localwave/staging/gzip-tail/part-0000.b64 \
+            localwave/staging/gzip-tail/part-0001.b64 \
+            localwave/staging/gzip-tail/part-0002.b64 \
+            localwave/staging/gzip-tail/part-0003.b64 \
+            | tr -d '\r\n\t ' | base64 -d > /tmp/v050-tail.gz
+
+          echo '02ddac9f5ab4134c980c6b0a87e676c1b4821e5815256c43dd044af004eb8eb6  /tmp/v050-tail.gz' | sha256sum -c -
+          gzip -dc /tmp/v050-tail.gz > /tmp/v050-tail.bin
+
+          python3 - <<'PY'
+          from pathlib import Path
+          unsigned = Path('/tmp/LocalWave-v0.5.0-unsigned-aligned.apk').read_bytes()
+          tail = Path('/tmp/v050-tail.bin').read_bytes()
+          prefix = 613861
+          if prefix > len(unsigned):
+              raise SystemExit('signed prefix is outside unsigned APK')
+          Path('/tmp/LocalWave-v0.5.0.apk').write_bytes(unsigned[:prefix] + tail)
+          PY
+
+          echo 'fcac32c45862a7cd9d595451bb26db076c30757f6772015633a5fc6500451c07  /tmp/LocalWave-v0.5.0.apk' | sha256sum -c -
+
+      - name: Verify signature, signer, package and version
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=/tmp/LocalWave-v0.5.0.apk
+          BT="$ANDROID_HOME/build-tools/36.0.0"
+          EXPECTED_CERT='34d98c603a2a2c54777c0065ecc3e38c3a4162d4f37d09ae137d004654d39a72'
+
+          "$BT/apksigner" verify --verbose --print-certs "$APK" | tee /tmp/apksigner.txt
+          CERT=$(sed -n 's/^.*Signer: certificate SHA-256 digest: //p; s/^Signer #[0-9][0-9]* certificate SHA-256 digest: //p' /tmp/apksigner.txt | head -1 | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          test -n "$CERT"
+          test "$CERT" = "$EXPECTED_CERT"
+
+          BADGING=$("$BT/aapt" dump badging "$APK" | head -1)
+          printf '%s\n' "$BADGING"
+          PACKAGE=$(printf '%s\n' "$BADGING" | sed -n "s/.*package: name='\([^']*\)'.*/\1/p")
+          VERSION_CODE=$(printf '%s\n' "$BADGING" | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
+          VERSION_NAME=$(printf '%s\n' "$BADGING" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+          test "$PACKAGE" = 'app.localwave.player'
+          test "$VERSION_CODE" = '16'
+          test "$VERSION_NAME" = '0.5.0'
+
+      - name: Publish v0.5.0 atomically
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -e localwave/releases/v0.5.0/LocalWave-v0.5.0.apk ]; then
+            echo 'v0.5.0 already exists; refusing to overwrite an immutable release.' >&2
+            exit 1
+          fi
+
+          mkdir -p localwave/releases/v0.5.0
+          cp /tmp/LocalWave-v0.5.0.apk localwave/releases/v0.5.0/LocalWave-v0.5.0.apk
+
+          python3 - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          notes = "Playlists & Queue. Adds persistent local playlists with create, rename, delete, play, shuffle, ordered track editing, and add-song/add-album/add-artist actions. Song long-press now includes Play next, Add to queue, and Add to playlist. Adds a live Up Next screen with jump-to-track, move up/down, remove, clear after current, and Save queue as playlist. Playlist and queue state reference existing MediaStore songs only; audio files are not duplicated, moved, or modified. Preserves Shadow Realm filtering, metadata editing/auto-fill, Bluetooth/MediaSession album artwork, shuffle/repeat, safe-area UI, changelog export, and the hardened in-app updater."
+          latest = {
+              "versionCode": 16,
+              "versionName": "0.5.0",
+              "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.5.0/LocalWave-v0.5.0.apk",
+              "sha256": "fcac32c45862a7cd9d595451bb26db076c30757f6772015633a5fc6500451c07",
+              "releaseNotes": notes,
+          }
+          Path('localwave/latest.json').write_text(json.dumps(latest, indent=2) + '\n', encoding='utf-8')
+          record = dict(latest)
+          record['sizeBytes'] = Path('/tmp/LocalWave-v0.5.0.apk').stat().st_size
+          record['publishedAtUtc'] = datetime.now(timezone.utc).isoformat()
+          Path('localwave/releases/v0.5.0/release.json').write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')
+          PY
+
+          rm -rf localwave/staging
+          rm -f .github/workflows/localwave-v050-source-publish-now.yml
+
+          git config user.name 'LocalWave Release Bot'
+          git config user.email '75506096+livenewme@users.noreply.github.com'
+          git add -A
+          git commit -m 'release(localwave): v0.5.0 [skip ci]'
+          git push
