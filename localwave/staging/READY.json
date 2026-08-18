@@ -1,0 +1,16 @@
+{
+  "versionCode": 13,
+  "versionName": "0.4.1",
+  "fileName": "LocalWave-v0.4.1.apk",
+  "sha256": "827ddf04d86d990390c3a1b47f32cab31815069be8d6d9023343115e698c034b",
+  "releaseNotes": "Adds The Shadow Realm for unwanted local audio without moving or deleting storage files. Long-press a song and choose Send to Shadow Realm to hide it from Songs, Albums, Artists, Liked, search, and newly built queues. Open Settings > The Shadow Realm to review hidden tracks, return individual songs to the mortal realm, or restore all. Hidden state persists across restarts and library rescans, and existing likes/metadata remain intact.",
+  "parts": 2,
+  "transportMode": "unsigned-artifact-tail",
+  "sourceArtifactUrl": "https://sdmntprwestus.oaiusercontent.com/files/00000000-508c-8230-ac89-4c1fe4449e11/raw?se=2026-08-18T16%3A34%3A45Z&sp=r&sv=2026-02-06&sr=b&scid=616320ae-1a1c-5772-bb48-63af5f618f4e&skoid=fadb8e47-d3c7-4c79-a9c3-970d9af3b213&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-17T22%3A22%3A10Z&ske=2026-08-18T22%3A22%3A10Z&sks=b&skv=2026-02-06&sig=12htFMejynXnxzSWrGxXhUx89vOCV%2BZOzzfUAzjF4%2Bo%3D",
+  "unsignedApkName": "LocalWave-v0.4.1-unsigned-aligned.apk",
+  "unsignedApkSha256": "7295b790ceeb801280cb781039fc41dfa3691b6b4faa19d8d75b0176bdfc6c81",
+  "prefixBytes": 592336,
+  "tailCompression": "gzip",
+  "compressedTailSha256": "a2ee98d92fc65bf524246d177a93da2b0ea91d90fec881f9ce2498a0212846b0",
+  "dryRun": false
+}
