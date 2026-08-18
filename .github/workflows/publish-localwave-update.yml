@@ -34,14 +34,58 @@ jobs:
           set +o pipefail
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.0.0" >/dev/null
 
+      - name: Read staged transport metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_ENV"
+          import json, re
+          from urllib.parse import urlparse
+          m = json.load(open('localwave/staging/READY.json', encoding='utf-8'))
+          mode = str(m.get('transportMode', 'full-base64'))
+          print('LW_TRANSPORT=' + mode)
+          if mode == 'unsigned-artifact-tail':
+              url = str(m.get('sourceArtifactUrl', ''))
+              parsed = urlparse(url)
+              if parsed.scheme != 'https' or not parsed.hostname or not parsed.hostname.endswith('.oaiusercontent.com'):
+                  raise SystemExit('unsigned artifact URL must be HTTPS on oaiusercontent.com')
+              name = str(m.get('unsignedApkName', ''))
+              if not re.fullmatch(r'LocalWave-v[0-9A-Za-z.+-]+-unsigned-aligned\.apk', name):
+                  raise SystemExit('unexpected unsigned APK artifact name')
+              print('LW_SOURCE_URL=' + url)
+              print('LW_UNSIGNED_NAME=' + name)
+          elif mode != 'full-base64':
+              raise SystemExit('unsupported transportMode: ' + mode)
+          PY
+
+      - name: Fetch verified unsigned build artifact
+        if: env.LW_TRANSPORT == 'unsigned-artifact-tail'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --show-error --silent --location \
+            --proto '=https' --tlsv1.2 \
+            --connect-timeout 15 --max-time 180 --retry 2 \
+            "$LW_SOURCE_URL" -o /tmp/localwave-build-artifact.zip
+          unzip -p /tmp/localwave-build-artifact.zip "$LW_UNSIGNED_NAME" > /tmp/LocalWave-unsigned.apk
+          test -s /tmp/LocalWave-unsigned.apk
+
       - name: Reconstruct staged signed APK and verify SHA-256
         shell: bash
         run: |
           set -euo pipefail
-          python3 localwave/tools/reconstruct_release.py \
-            localwave/staging \
-            /tmp/LocalWave-release.apk \
-            /tmp/localwave-meta.json
+          if [ "$LW_TRANSPORT" = "unsigned-artifact-tail" ]; then
+            python3 localwave/tools/reconstruct_release.py \
+              localwave/staging \
+              /tmp/LocalWave-release.apk \
+              /tmp/localwave-meta.json \
+              /tmp/LocalWave-unsigned.apk
+          else
+            python3 localwave/tools/reconstruct_release.py \
+              localwave/staging \
+              /tmp/LocalWave-release.apk \
+              /tmp/localwave-meta.json
+          fi
 
           python3 - <<'PY' >> "$GITHUB_ENV"
           import json
@@ -75,7 +119,6 @@ jobs:
           test "$PACKAGE" = "app.localwave.player" || { echo "Wrong Android package: $PACKAGE" >&2; exit 1; }
           test "$VERSION_CODE" = "$LW_VERSION_CODE" || { echo "APK versionCode $VERSION_CODE does not match manifest $LW_VERSION_CODE" >&2; exit 1; }
 
-          # Recheck the exact bytes after Android tooling has inspected the APK.
           ACTUAL_SHA=$(sha256sum "$APK" | awk '{print $1}')
           test "$ACTUAL_SHA" = "$LW_SHA256" || { echo "APK changed after reconstruction" >&2; exit 1; }
 
