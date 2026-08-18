@@ -1,7 +1,7 @@
 {
-  "versionCode": 5,
-  "versionName": "0.2.2",
-  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.2.2/LocalWave-v0.2.2.apk",
-  "sha256": "a0e0b2be4da86c6c6f7cfde65e3d272bf7714a13383eb2176d0b0d49c8c82870",
-  "releaseNotes": "Pipeline verification release. No functional changes from v0.2.1; this release verifies end-to-end in-app update delivery from the signed GitHub publishing pipeline."
+  "versionCode": 7,
+  "versionName": "0.2.4",
+  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.2.4/LocalWave-v0.2.4.apk",
+  "sha256": "b526dab589a3e431cf2d5166de4220e00c20d086c665ce6901395368dd625e54",
+  "releaseNotes": "Updater verification release. No functional changes from v0.2.3; this release verifies the repaired Android 15/16 PackageInstaller handoff and background update flow."
 }

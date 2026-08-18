@@ -1,0 +1,9 @@
+{
+  "versionCode": 7,
+  "versionName": "0.2.4",
+  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.2.4/LocalWave-v0.2.4.apk",
+  "sha256": "b526dab589a3e431cf2d5166de4220e00c20d086c665ce6901395368dd625e54",
+  "releaseNotes": "Updater verification release. No functional changes from v0.2.3; this release verifies the repaired Android 15/16 PackageInstaller handoff and background update flow.",
+  "sizeBytes": 571075,
+  "publishedAtUtc": "2026-08-18T03:10:44.877178+00:00"
+}
