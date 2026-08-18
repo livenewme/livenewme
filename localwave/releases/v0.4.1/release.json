@@ -1,0 +1,9 @@
+{
+  "versionCode": 13,
+  "versionName": "0.4.1",
+  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.4.1/LocalWave-v0.4.1.apk",
+  "sha256": "827ddf04d86d990390c3a1b47f32cab31815069be8d6d9023343115e698c034b",
+  "releaseNotes": "Adds The Shadow Realm for unwanted local audio without moving or deleting storage files. Long-press a song and choose Send to Shadow Realm to hide it from Songs, Albums, Artists, Liked, search, and newly built queues. Open Settings > The Shadow Realm to review hidden tracks, return individual songs to the mortal realm, or restore all. Hidden state persists across restarts and library rescans, and existing likes/metadata remain intact.",
+  "sizeBytes": 607908,
+  "publishedAtUtc": "2026-08-18T16:32:44.323418+00:00"
+}

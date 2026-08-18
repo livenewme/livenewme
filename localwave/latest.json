@@ -1,7 +1,7 @@
 {
-  "versionCode": 12,
-  "versionName": "0.4.0",
-  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.4.0/LocalWave-v0.4.0.apk",
-  "sha256": "beb721dc881147d8bc545b936ac340ada3aae7bf03ccb41fb3730e9e0598d61e",
-  "releaseNotes": "Broad polish and quality-of-life release. Adds persistent library sorting and tab state, sort by title/artist/album/newest, manual library refresh and scan status, clearer search/empty states, album and artist artwork, real persistent shuffle and repeat modes, previous/next wraparound, elapsed/total playback time, artwork caching, song details and diagnostics, and delayed notification permission until playback. Metadata auto-fill is smoother with editable search terms, filename fallback, title-only fallback, deduplicated/ranked candidates, variant penalties, immediate field population, Revert, and unsaved-edit protection."
+  "versionCode": 13,
+  "versionName": "0.4.1",
+  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.4.1/LocalWave-v0.4.1.apk",
+  "sha256": "827ddf04d86d990390c3a1b47f32cab31815069be8d6d9023343115e698c034b",
+  "releaseNotes": "Adds The Shadow Realm for unwanted local audio without moving or deleting storage files. Long-press a song and choose Send to Shadow Realm to hide it from Songs, Albums, Artists, Liked, search, and newly built queues. Open Settings > The Shadow Realm to review hidden tracks, return individual songs to the mortal realm, or restore all. Hidden state persists across restarts and library rescans, and existing likes/metadata remain intact."
 }
