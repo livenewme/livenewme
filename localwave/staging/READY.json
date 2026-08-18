@@ -1,0 +1,16 @@
+{
+  "versionCode": 14,
+  "versionName": "0.4.2",
+  "fileName": "LocalWave-v0.4.2.apk",
+  "sha256": "44e9be6420d13399bc525e122ee0e70997617a8d2261e7e3e8a1e1b69dc66fe7",
+  "releaseNotes": "Safe-area, DRY refactor, and Change log release. LocalWave now respects Android system-bar and display-cutout insets so the app title and top controls sit below the status area with consistent breathing room. Shared package/version helpers, system-inset/window handling, MediaStore music querying, duration formatting, and song-detail presentation were centralized to reduce duplicated implementation while keeping lifecycle and updater redundancy where isolation is operationally useful. Settings now includes a detailed Change log covering LocalWave releases back to v0.1.0, with Export change log to save the bundled history as a Markdown file using Android's document picker. MusicBrainz identification also derives the installed LocalWave version instead of using a stale hard-coded version string.",
+  "parts": 3,
+  "transportMode": "unsigned-artifact-tail",
+  "sourceArtifactUrl": "https://sdmntprwestus3.oaiusercontent.com/files/00000000-d0c4-81fd-8905-dc3cc7b0a967/raw?se=2026-08-18T17%3A25%3A13Z&sp=r&sv=2026-02-06&sr=b&scid=b92b207a-e5b0-5e19-90e6-ab47975d663a&skoid=fadb8e47-d3c7-4c79-a9c3-970d9af3b213&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-17T22%3A29%3A53Z&ske=2026-08-18T22%3A29%3A53Z&sks=b&skv=2026-02-06&sig=%2B9sL8pZZ3gxN9ZkMV442TQMu8qoWBX7aRDZEy8bxlrA%3D",
+  "unsignedApkName": "LocalWave-v0.4.2-unsigned-aligned.apk",
+  "unsignedApkSha256": "7bc96f26cf4db0ea622f3ca8f2ad358ef244a7f4f97cd5b8ba37814cfb4cf7e5",
+  "prefixBytes": 597311,
+  "tailCompression": "gzip",
+  "compressedTailSha256": "a4f833a80a56ca8739de2200ad5083e21681df4c40e17c9fb8362440e82358e0",
+  "dryRun": false
+}
