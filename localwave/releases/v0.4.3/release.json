@@ -1,0 +1,9 @@
+{
+  "versionCode": 15,
+  "versionName": "0.4.3",
+  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.4.3/LocalWave-v0.4.3.apk",
+  "sha256": "e775fb3f7557cfd472628957d6dcc4355df3dd9790be02f4820e1caae295549e",
+  "releaseNotes": "Improves album-art reliability on supported car radios and other remote media displays. LocalWave now publishes the current track cover directly in Android MediaSession metadata, uses the same artwork as the playback notification, loads/downsamples artwork asynchronously to 320 px, caches it, and prefetches the next track so compatible Bluetooth AVRCP 1.6 head units such as supported UConnect systems can receive artwork promptly. Embedded MP3 artwork is preferred with a MediaStore thumbnail fallback. Head units that do not negotiate/support Bluetooth cover art may still show their default music icon.",
+  "sizeBytes": 616211,
+  "publishedAtUtc": "2026-08-18T18:18:00.775826+00:00"
+}
