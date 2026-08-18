@@ -6,10 +6,10 @@ LocalWave updates are published as **pre-signed APKs**. The APK signing key is n
 
 A release is accepted by the publishing workflow only after all of these checks pass:
 
-1. The staged Base64 parts reconstruct without error.
-2. The reconstructed file is at most 100 MiB and has APK/ZIP magic.
-3. Its SHA-256 exactly matches `READY.json`.
-4. Android `apksigner` verifies the APK.
+1. Staged transport data reconstructs without error.
+2. The unsigned build artifact and compressed signing tail each match their advertised SHA-256 values.
+3. The reconstructed signed APK SHA-256 exactly matches `READY.json`.
+4. Android `apksigner` verifies the reconstructed APK.
 5. The signer certificate SHA-256 is exactly:
    `34d98c603a2a2c54777c0065ecc3e38c3a4162d4f37d09ae137d004654d39a72`
 6. Android package ID is exactly `app.localwave.player`.
@@ -24,41 +24,30 @@ and replace `localwave/latest.json` with the new version, raw GitHub download UR
 
 The Android app independently repeats its own download hash, package, version, and signing-certificate checks before opening PackageInstaller.
 
-## Preparing a release
+## Normal transport
 
-First build and sign the APK outside GitHub using the existing LocalWave release key.
+Normal releases use `transportMode: unsigned-artifact-tail`.
 
-Then run:
+The unsigned aligned APK comes from the private GitHub Actions build artifact and is independently SHA-256 checked. Local signing is then represented by a small gzip-compressed signed tail plus the exact common-prefix byte count. GitHub reconstructs the signed APK as:
 
-```bash
-python3 localwave/tools/make_staging.py \
-  /path/to/LocalWave-v0.2.2.apk \
-  5 \
-  0.2.2 \
-  --notes "Release notes here"
-```
+`unsigned_apk[:prefixBytes] + gzip_decompress(signed_tail)`
 
-This creates:
+The final result must match the expected signed APK SHA-256 and pass `apksigner`, certificate pinning, package-ID, and version checks before publication.
 
-```text
-localwave/staging/
-├── parts/
-│   ├── part-0000.b64
-│   ├── part-0001.b64
-│   └── ...
-└── READY.json
-```
+This keeps the LocalWave private signing key completely outside GitHub while avoiding transport of the entire signed APK through text tooling.
 
-Commit/upload **all `parts/part-*.b64` files first**. Commit/upload `READY.json` last. A push affecting `localwave/staging/READY.json` triggers `.github/workflows/publish-localwave-update.yml`.
+## Fallback transport
 
-The workflow publishes atomically and removes the staging directory in its own `[skip ci]` commit, preventing a cleanup-trigger loop.
+`full-base64` remains supported as a fallback for small payloads and dry-run testing.
 
-## Why Base64 staging exists
+## Release trigger
 
-The ChatGPT GitHub connector can reliably write UTF-8 repository files but does not expose GitHub Release binary-asset uploads. Base64 staging bridges that transport limitation. GitHub Actions reconstructs the exact already-signed APK, verifies it, and commits the real binary file. LocalWave itself downloads the final `.apk`; it never downloads or reconstructs the staging chunks.
+Upload all staging payload files first. Create `localwave/staging/READY.json` last. A push affecting that file triggers `.github/workflows/publish-localwave-update.yml`.
+
+The workflow publishes atomically and removes the entire staging directory in its own `[skip ci]` commit, preventing a cleanup-trigger loop.
 
 ## Dry-run test
 
-Set `"dryRun": true` in `READY.json` to test the staging, reconstruction, SHA verification, repository write permission, and cleanup path without publishing an APK or modifying `latest.json`.
+Set `"dryRun": true` in `READY.json` to test staging, reconstruction, SHA verification, repository write permission, and cleanup without publishing an APK or modifying `latest.json`.
 
 A successful dry run writes `localwave/pipeline-status.json`.
