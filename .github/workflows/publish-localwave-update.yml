@@ -1,0 +1,106 @@
+name: Publish LocalWave Update
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "localwave/staging/READY.json"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: localwave-release-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out update repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Android APK verification tools
+        shell: bash
+        run: |
+          set +o pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.0.0" >/dev/null
+
+      - name: Reconstruct staged signed APK and verify SHA-256
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 localwave/tools/reconstruct_release.py \
+            localwave/staging \
+            /tmp/LocalWave-release.apk \
+            /tmp/localwave-meta.json
+
+          python3 - <<'PY' >> "$GITHUB_ENV"
+          import json
+          m = json.load(open('/tmp/localwave-meta.json', encoding='utf-8'))
+          print('LW_VERSION_CODE=' + str(m['versionCode']))
+          print('LW_VERSION_NAME=' + m['versionName'])
+          print('LW_FILE_NAME=' + m['fileName'])
+          print('LW_SHA256=' + m['sha256'])
+          print('LW_DRY_RUN=' + ('true' if m.get('dryRun') else 'false'))
+          PY
+
+      - name: Verify LocalWave package, version, and release signing certificate
+        if: env.LW_DRY_RUN != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=/tmp/LocalWave-release.apk
+          BT="$ANDROID_HOME/build-tools/36.0.0"
+          EXPECTED_CERT="34d98c603a2a2c54777c0065ecc3e38c3a4162d4f37d09ae137d004654d39a72"
+
+          "$BT/apksigner" verify --verbose --print-certs "$APK" | tee /tmp/apksigner.txt
+          CERT=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' /tmp/apksigner.txt | head -1 | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          test "$CERT" = "$EXPECTED_CERT" || { echo "Wrong LocalWave signing certificate" >&2; exit 1; }
+
+          BADGING=$("$BT/aapt" dump badging "$APK" | head -1)
+          printf '%s\n' "$BADGING"
+          PACKAGE=$(printf '%s\n' "$BADGING" | sed -n "s/.*package: name='\([^']*\)'.*/\1/p")
+          VERSION_CODE=$(printf '%s\n' "$BADGING" | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
+
+          test "$PACKAGE" = "app.localwave.player" || { echo "Wrong Android package: $PACKAGE" >&2; exit 1; }
+          test "$VERSION_CODE" = "$LW_VERSION_CODE" || { echo "APK versionCode $VERSION_CODE does not match manifest $LW_VERSION_CODE" >&2; exit 1; }
+
+          # Recheck the exact bytes after Android tooling has inspected the APK.
+          ACTUAL_SHA=$(sha256sum "$APK" | awk '{print $1}')
+          test "$ACTUAL_SHA" = "$LW_SHA256" || { echo "APK changed after reconstruction" >&2; exit 1; }
+
+      - name: Publish atomically and clean staging
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 localwave/tools/finalize_release.py \
+            /tmp/localwave-meta.json \
+            /tmp/LocalWave-release.apk \
+            .
+
+          rm -rf localwave/staging
+
+          git config user.name "LocalWave Release Bot"
+          git config user.email "75506096+livenewme@users.noreply.github.com"
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No repository changes to publish"
+            exit 0
+          fi
+
+          if [ "$LW_DRY_RUN" = "true" ]; then
+            git commit -m "test(localwave): validate release pipeline [skip ci]"
+          else
+            git commit -m "release(localwave): v${LW_VERSION_NAME} [skip ci]"
+          fi
+          git push
