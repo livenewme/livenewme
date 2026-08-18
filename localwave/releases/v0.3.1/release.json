@@ -1,0 +1,9 @@
+{
+  "versionCode": 11,
+  "versionName": "0.3.1",
+  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.3.1/LocalWave-v0.3.1.apk",
+  "sha256": "16892b14bd9edee6d4ddf9abe55e8aee08390f515d847292f28d9279c21bb23a",
+  "releaseNotes": "Automatic MP3 metadata search. In the metadata editor, tap Auto-fill metadata from MusicBrainz to search by title/artist and track duration, review ranked candidates, select a match, and populate title, artist, album, album artist, year, track number, genre when available, and Cover Art Archive artwork. Search is opt-in and never writes the MP3 until Save is pressed.",
+  "sizeBytes": 595707,
+  "publishedAtUtc": "2026-08-18T04:32:23.864850+00:00"
+}
