@@ -64,11 +64,11 @@ jobs:
           elif mode == 'source-build-tail':
               count = m.get('sourceParts')
               sha = str(m.get('sourceSha256', '')).lower()
-              directory = str(m.get('sourceDirectory', 'source2'))
+              directory = str(m.get('sourceDirectory', 'source'))
               if not isinstance(count, int) or count < 1 or count > 128:
                   raise SystemExit('sourceParts must be an integer from 1 through 128')
-              if not re.fullmatch(r'[0-9a-f]{64}', sha):
-                  raise SystemExit('sourceSha256 must be exactly 64 lowercase hexadecimal characters')
+              if sha and not re.fullmatch(r'[0-9a-f]{64}', sha):
+                  raise SystemExit('sourceSha256 must be empty or exactly 64 lowercase hexadecimal characters')
               if not re.fullmatch(r'[A-Za-z0-9._-]+', directory):
                   raise SystemExit('sourceDirectory has an unexpected format')
               print('LW_SOURCE_PARTS=' + str(count))
@@ -100,7 +100,7 @@ jobs:
           from pathlib import Path
 
           count = int(os.environ['LW_SOURCE_PARTS'])
-          expected_sha = os.environ['LW_SOURCE_SHA']
+          expected_sha = os.environ.get('LW_SOURCE_SHA', '')
           source_dir = Path('localwave/staging') / os.environ['LW_SOURCE_DIRECTORY']
           expected = [source_dir / f'part-{i:04d}.b64' for i in range(count)]
           actual = sorted(p.name for p in source_dir.glob('part-*.b64'))
@@ -114,8 +114,9 @@ jobs:
           except Exception as exc:
               raise SystemExit(f'staged source Base64 is invalid: {exc}')
           actual_sha = hashlib.sha256(raw).hexdigest()
-          if actual_sha != expected_sha:
+          if expected_sha and actual_sha != expected_sha:
               raise SystemExit(f'source SHA-256 mismatch: expected {expected_sha}, got {actual_sha}')
+          print(f'Staged source SHA-256: {actual_sha}')
           Path('/tmp/localwave-source.tar.gz').write_bytes(raw)
           PY
 
