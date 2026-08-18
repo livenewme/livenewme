@@ -63,8 +63,9 @@ jobs:
           EXPECTED_CERT="34d98c603a2a2c54777c0065ecc3e38c3a4162d4f37d09ae137d004654d39a72"
 
           "$BT/apksigner" verify --verbose --print-certs "$APK" | tee /tmp/apksigner.txt
-          CERT=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' /tmp/apksigner.txt | head -1 | tr -d ':' | tr '[:upper:]' '[:lower:]')
-          test "$CERT" = "$EXPECTED_CERT" || { echo "Wrong LocalWave signing certificate" >&2; exit 1; }
+          CERT=$(sed -n 's/^.*Signer: certificate SHA-256 digest: //p; s/^Signer #[0-9][0-9]* certificate SHA-256 digest: //p' /tmp/apksigner.txt | head -1 | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          test -n "$CERT" || { echo "Could not read APK signing certificate digest" >&2; exit 1; }
+          test "$CERT" = "$EXPECTED_CERT" || { echo "Wrong LocalWave signing certificate: $CERT" >&2; exit 1; }
 
           BADGING=$("$BT/aapt" dump badging "$APK" | head -1)
           printf '%s\n' "$BADGING"
