@@ -1,7 +1,7 @@
 {
-  "versionCode": 3,
-  "versionName": "0.2.0",
-  "apkUrl": "https://github.com/livenewme/livenewme/releases/download/v0.2.0/LocalWave-v0.2.0.apk",
-  "sha256": "30230baa82ac97e501a4ee2d2acbd7ebd051efc596f67a863236f27177a5a124",
-  "releaseNotes": "LocalWave v0.2.0 adds built-in GitHub update checks, in-app download progress, SHA-256 verification, signing-certificate verification, and Android PackageInstaller integration. Playback remains on the Media3 engine introduced in v0.1.1."
+  "versionCode": 5,
+  "versionName": "0.2.2",
+  "apkUrl": "https://raw.githubusercontent.com/livenewme/livenewme/main/localwave/releases/v0.2.2/LocalWave-v0.2.2.apk",
+  "sha256": "a0e0b2be4da86c6c6f7cfde65e3d272bf7714a13383eb2176d0b0d49c8c82870",
+  "releaseNotes": "Pipeline verification release. No functional changes from v0.2.1; this release verifies end-to-end in-app update delivery from the signed GitHub publishing pipeline."
 }
