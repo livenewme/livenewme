@@ -15,7 +15,7 @@ def main():
     ap.add_argument("--notes", default="")
     ap.add_argument("--notes-file", type=Path)
     ap.add_argument("--output", type=Path, default=Path("localwave/staging"))
-    ap.add_argument("--chunk-chars", type=int, default=48000)
+    ap.add_argument("--chunk-chars", type=int, default=16000)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
