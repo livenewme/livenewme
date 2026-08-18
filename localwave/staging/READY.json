@@ -1,0 +1,16 @@
+{
+  "versionCode": 16,
+  "versionName": "0.5.0",
+  "fileName": "LocalWave-v0.5.0.apk",
+  "sha256": "fcac32c45862a7cd9d595451bb26db076c30757f6772015633a5fc6500451c07",
+  "releaseNotes": "Playlists & Queue. Adds persistent local playlists with create, rename, delete, play, shuffle, ordered track editing, and add-song/add-album/add-artist actions. Song long-press now includes Play next, Add to queue, and Add to playlist. Adds a live Up Next screen with jump-to-track, move up/down, remove, clear after current, and Save queue as playlist. Playlist and queue state reference existing MediaStore songs only; audio files are not duplicated, moved, or modified. Preserves Shadow Realm filtering, metadata editing/auto-fill, Bluetooth/MediaSession album artwork, shuffle/repeat, safe-area UI, changelog export, and the hardened in-app updater.",
+  "parts": 4,
+  "transportMode": "unsigned-artifact-tail",
+  "sourceArtifactUrl": "https://sdmntprwestus3.oaiusercontent.com/files/00000000-13d4-81fd-be7c-dd5715737975/raw?se=2026-08-18T19%3A03%3A48Z&sp=r&sv=2026-02-06&sr=b&scid=dcbcf75e-a478-5d63-8088-e3628425f166&skoid=fadb8e47-d3c7-4c79-a9c3-970d9af3b213&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-17T22%3A20%3A17Z&ske=2026-08-18T22%3A20%3A17Z&sks=b&skv=2026-02-06&sig=u/W4/usxkue%2BGajHw8cfx1EIaT29AaCu/fXqul%2B5C5M%3D",
+  "unsignedApkName": "LocalWave-v0.5.0-unsigned-aligned.apk",
+  "unsignedApkSha256": "f1a5409878dda2f5a9fd9989e68276afda66b3f0819c3824af1c3bd4ae526711",
+  "prefixBytes": 613861,
+  "tailCompression": "gzip",
+  "compressedTailSha256": "02ddac9f5ab4134c980c6b0a87e676c1b4821e5815256c43dd044af004eb8eb6",
+  "dryRun": false
+}
