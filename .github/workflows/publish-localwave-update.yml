@@ -28,11 +28,16 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Install Android APK verification tools
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+
+      - name: Install Android build and verification tools
         shell: bash
         run: |
           set +o pipefail
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.0.0" >/dev/null
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" >/dev/null
 
       - name: Read staged transport metadata
         shell: bash
@@ -41,9 +46,11 @@ jobs:
           python3 - <<'PY' >> "$GITHUB_ENV"
           import json, re
           from urllib.parse import urlparse
+
           m = json.load(open('localwave/staging/READY.json', encoding='utf-8'))
           mode = str(m.get('transportMode', 'full-base64'))
           print('LW_TRANSPORT=' + mode)
+
           if mode == 'unsigned-artifact-tail':
               url = str(m.get('sourceArtifactUrl', ''))
               parsed = urlparse(url)
@@ -54,6 +61,19 @@ jobs:
                   raise SystemExit('unexpected unsigned APK artifact name')
               print('LW_SOURCE_URL=' + url)
               print('LW_UNSIGNED_NAME=' + name)
+          elif mode == 'source-build-tail':
+              count = m.get('sourceParts')
+              sha = str(m.get('sourceSha256', '')).lower()
+              directory = str(m.get('sourceDirectory', 'source2'))
+              if not isinstance(count, int) or count < 1 or count > 128:
+                  raise SystemExit('sourceParts must be an integer from 1 through 128')
+              if not re.fullmatch(r'[0-9a-f]{64}', sha):
+                  raise SystemExit('sourceSha256 must be exactly 64 lowercase hexadecimal characters')
+              if not re.fullmatch(r'[A-Za-z0-9._-]+', directory):
+                  raise SystemExit('sourceDirectory has an unexpected format')
+              print('LW_SOURCE_PARTS=' + str(count))
+              print('LW_SOURCE_SHA=' + sha)
+              print('LW_SOURCE_DIRECTORY=' + directory)
           elif mode != 'full-base64':
               raise SystemExit('unsupported transportMode: ' + mode)
           PY
@@ -70,11 +90,52 @@ jobs:
           unzip -p /tmp/localwave-build-artifact.zip "$LW_UNSIGNED_NAME" > /tmp/LocalWave-unsigned.apk
           test -s /tmp/LocalWave-unsigned.apk
 
+      - name: Build verified unsigned APK from staged source
+        if: env.LW_TRANSPORT == 'source-build-tail'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, hashlib, os
+          from pathlib import Path
+
+          count = int(os.environ['LW_SOURCE_PARTS'])
+          expected_sha = os.environ['LW_SOURCE_SHA']
+          source_dir = Path('localwave/staging') / os.environ['LW_SOURCE_DIRECTORY']
+          expected = [source_dir / f'part-{i:04d}.b64' for i in range(count)]
+          actual = sorted(p.name for p in source_dir.glob('part-*.b64'))
+          if actual != [p.name for p in expected]:
+              raise SystemExit('staged source contains missing, extra, or incorrectly numbered parts')
+          chunks = []
+          for p in expected:
+              chunks.append(''.join(p.read_text(encoding='ascii').split()))
+          try:
+              raw = base64.b64decode(''.join(chunks), validate=True)
+          except Exception as exc:
+              raise SystemExit(f'staged source Base64 is invalid: {exc}')
+          actual_sha = hashlib.sha256(raw).hexdigest()
+          if actual_sha != expected_sha:
+              raise SystemExit(f'source SHA-256 mismatch: expected {expected_sha}, got {actual_sha}')
+          Path('/tmp/localwave-source.tar.gz').write_bytes(raw)
+          PY
+
+          rm -rf /tmp/localwave-source
+          mkdir -p /tmp/localwave-source
+          tar -xzf /tmp/localwave-source.tar.gz -C /tmp/localwave-source --strip-components=1
+          test -f /tmp/localwave-source/app/build.gradle
+
+          cd /tmp/localwave-source
+          gradle :app:assembleRelease --stacktrace
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -f -p 4 \
+            app/build/outputs/apk/release/app-release-unsigned.apk \
+            /tmp/LocalWave-unsigned.apk
+          test -s /tmp/LocalWave-unsigned.apk
+
       - name: Reconstruct staged signed APK and verify SHA-256
         shell: bash
         run: |
           set -euo pipefail
-          if [ "$LW_TRANSPORT" = "unsigned-artifact-tail" ]; then
+          if [ "$LW_TRANSPORT" = "unsigned-artifact-tail" ] || [ "$LW_TRANSPORT" = "source-build-tail" ]; then
             python3 localwave/tools/reconstruct_release.py \
               localwave/staging \
               /tmp/LocalWave-release.apk \
