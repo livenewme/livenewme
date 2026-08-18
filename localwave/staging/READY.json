@@ -1,0 +1,16 @@
+{
+  "versionCode": 12,
+  "versionName": "0.4.0",
+  "fileName": "LocalWave-v0.4.0.apk",
+  "sha256": "beb721dc881147d8bc545b936ac340ada3aae7bf03ccb41fb3730e9e0598d61e",
+  "releaseNotes": "Broad polish and quality-of-life release. Adds persistent library sorting and tab state, sort by title/artist/album/newest, manual library refresh and scan status, clearer search/empty states, album and artist artwork, real persistent shuffle and repeat modes, previous/next wraparound, elapsed/total playback time, artwork caching, song details and diagnostics, and delayed notification permission until playback. Metadata auto-fill is smoother with editable search terms, filename fallback, title-only fallback, deduplicated/ranked candidates, variant penalties, immediate field population, Revert, and unsaved-edit protection.",
+  "parts": 2,
+  "transportMode": "unsigned-artifact-tail",
+  "sourceArtifactUrl": "https://sdmntprwestus3.oaiusercontent.com/files/00000000-1b28-81fd-bf84-7d3628fa4f54/raw?se=2026-08-18T06%3A49%3A24Z&sp=r&sv=2026-02-06&sr=b&scid=3c213128-1d2d-564f-8c55-7777bc973bb4&skoid=fadb8e47-d3c7-4c79-a9c3-970d9af3b213&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-17T22%3A26%3A01Z&ske=2026-08-18T22%3A26%3A01Z&sks=b&skv=2026-02-06&sig=Ubo9sup9IYK3/7WM%2BlJI1hFu1oDeCLRD8c0tKIo5krQ%3D",
+  "unsignedApkName": "LocalWave-v0.4.0-unsigned-aligned.apk",
+  "unsignedApkSha256": "aac29351eac30d6967a740a6c075c2a4ac8dc9fed5688375335e8e95b464fa09",
+  "prefixBytes": 586292,
+  "tailCompression": "gzip",
+  "compressedTailSha256": "d7979b19261c3b0094a03193c96c1092a73b3735b7ef96b6ebdc545f0b9320bc",
+  "dryRun": false
+}
