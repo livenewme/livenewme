@@ -99,9 +99,9 @@ def main():
     if transport == "full-base64":
         apk = decode_parts(staging / "parts", parts, MAX_APK_BYTES)
 
-    elif transport == "unsigned-artifact-tail":
+    elif transport in ("unsigned-artifact-tail", "source-build-tail"):
         if unsigned_path is None or not unsigned_path.is_file():
-            fail("unsigned-artifact-tail transport requires an unsigned APK input")
+            fail("tail transport requires an unsigned APK input")
 
         unsigned_sha = str(meta.get("unsignedApkSha256", "")).lower()
         if not SHA_RE.fullmatch(unsigned_sha):
